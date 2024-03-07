@@ -1,0 +1,25 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: oloj-backend-user-service
+          uri: lb://oloj-backend-user-service
+          predicates:
+            - PATH=/api/user/**
+        - id: oloj-backend-question-service
+          uri: lb://oloj-backend-question-service
+          predicates:
+            - PATH=/api/question/**
+        - id: oloj-backend-judge-service
+          uri: lb://oloj-backend-judge-service
+          predicates:
+            - PATH=/api/judge/**
+
+  application:
+    name: oloj-backend-gateway
+  main:
+    web-application-type: reactive
+
