@@ -3,16 +3,15 @@ package com.yang.olojbackendquestionservice.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-
 import com.yang.olojbackendcommon.common.ErrorCode;
 import com.yang.olojbackendcommon.constant.CommonConstant;
 import com.yang.olojbackendcommon.exception.BusinessException;
 import com.yang.olojbackendcommon.utils.SqlUtils;
-import com.yang.olojbackendserviceclient.service.JudgeService;
-import com.yang.olojbackenduserservice.service.UserService;
 import com.yang.olojbackendquestionservice.mapper.QuestionSubmitMapper;
 import com.yang.olojbackendquestionservice.service.QuestionService;
 import com.yang.olojbackendquestionservice.service.QuestionSubmitService;
+import com.yang.olojbackendserviceclient.service.JudgeFeignClient;
+import com.yang.olojbackendserviceclient.service.UserFeignClient;
 import olojbackendmodel.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import olojbackendmodel.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import olojbackendmodel.model.entity.Question;
@@ -42,10 +41,10 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     @Resource
     private QuestionService questionService;
     @Resource
-    private UserService userService;
+    private UserFeignClient userFeignClient;
     @Resource
     @Lazy
-    private JudgeService judgeService;
+    private JudgeFeignClient judgeFeignClient;
 
     /**
      * 提交题目
@@ -93,7 +92,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         Long questionSubmitId = questionSubmit.getId();
         //todo 执行判题服务
         CompletableFuture.runAsync(() -> {
-            judgeService.doJudge(questionSubmitId);
+            judgeFeignClient.doJudge(questionSubmitId);
         });
 
         return questionSubmitId;
@@ -151,7 +150,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         //脱敏,除了管理员，普通用户只能看到非答案、提交代码等公开信息
         long userId = loginUser.getId();
         //处理脱敏
-        if (userId != questionSubmit.getUserId() && !userService.isAdmin(loginUser)) {
+        if (userId != questionSubmit.getUserId() && !userFeignClient.isAdmin(loginUser)) {
             questionSubmitVO.setCode(null);
         }
 

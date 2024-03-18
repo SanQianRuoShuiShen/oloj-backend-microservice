@@ -108,6 +108,8 @@
             <scope>test</scope>
         </dependency>
 
+<!--        //TODO knife4j 分布式缓存                       -->
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

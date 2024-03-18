@@ -7,8 +7,7 @@ import com.yang.olojbackendjudgeservice.judge.codesandbox.CodeSandbox;
 import com.yang.olojbackendjudgeservice.judge.codesandbox.CodeSandboxFactory;
 import com.yang.olojbackendjudgeservice.judge.codesandbox.CodeSandboxProxy;
 import com.yang.olojbackendjudgeservice.judge.strategy.JudgeContext;
-import com.yang.olojbackendserviceclient.service.QuestionService;
-import com.yang.olojbackendserviceclient.service.QuestionSubmitService;
+import com.yang.olojbackendserviceclient.service.QuestionFeignClient;
 import olojbackendmodel.model.codesandbox.ExecuteCodeRequest;
 import olojbackendmodel.model.codesandbox.ExecuteCodeResponse;
 import olojbackendmodel.model.codesandbox.JudgeInfo;
@@ -30,9 +29,8 @@ public class JudgeServiceImpl implements JudgeService {
     @Value("${codesandbox.type:example}")
     private String type;
     @Resource
-    private QuestionService questionService;
-    @Resource
-    private QuestionSubmitService questionSubmitService;
+    private QuestionFeignClient questionFeignClient;
+
     @Resource
     private JudgeManager judgeManager;
 
@@ -42,12 +40,12 @@ public class JudgeServiceImpl implements JudgeService {
     public QuestionSubmit doJudge(long questionSubmitId) {
         //判题服务业务流程
         //1)传入题目的提交id，获取对应的题目、提交信息（代码、编程语言等等）
-        QuestionSubmit questionSubmit = questionSubmitService.getById(questionSubmitId);
+        QuestionSubmit questionSubmit = questionFeignClient.getQuestionSubmitIdById(questionSubmitId);
         if (questionSubmit == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "提交信息不存在");
         }
         Long questionId = questionSubmit.getQuestionId();
-        Question question = questionService.getById(questionId);
+        Question question = questionFeignClient.getQuestionById(questionId);
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目不存在");
         }
@@ -64,7 +62,7 @@ public class JudgeServiceImpl implements JudgeService {
         QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
         questionSubmitUpdate.setId(questionSubmitId);
         questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.RUNNING.getValue());
-        boolean update = questionSubmitService.updateById(questionSubmitUpdate);
+        boolean update = questionFeignClient.updateQuestionSubmitById(questionSubmitUpdate);
         if (!update) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "判题状态更新失败");
         }
@@ -100,11 +98,11 @@ public class JudgeServiceImpl implements JudgeService {
         questionSubmitUpdate.setId(questionSubmitId);
         questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
         questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-        update = questionSubmitService.updateById(questionSubmitUpdate);
+        update = questionFeignClient.updateQuestionSubmitById(questionSubmitUpdate);
         if (!update) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目状态更新失败");
         }
-        QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
+        QuestionSubmit questionSubmitResult = questionFeignClient.getQuestionSubmitIdById(questionId);
         return questionSubmitResult;
         //判断逻辑 1.判断沙箱执行结果数量和预期结果数量是否相等
 //        JudgeInfoMessageEnum judgeInfoMessageEnum = JudgeInfoMessageEnum.WAITING;

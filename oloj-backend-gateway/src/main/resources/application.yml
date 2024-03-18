@@ -8,18 +8,19 @@ spring:
         - id: oloj-backend-user-service
           uri: lb://oloj-backend-user-service
           predicates:
-            - PATH=/api/user/**
+            - Path=/api/user/**
         - id: oloj-backend-question-service
           uri: lb://oloj-backend-question-service
           predicates:
-            - PATH=/api/question/**
+            - Path=/api/question/**
         - id: oloj-backend-judge-service
           uri: lb://oloj-backend-judge-service
           predicates:
-            - PATH=/api/judge/**
+            - Path=/api/judge/**
 
   application:
     name: oloj-backend-gateway
   main:
     web-application-type: reactive
-
+server:
+  port: 8101

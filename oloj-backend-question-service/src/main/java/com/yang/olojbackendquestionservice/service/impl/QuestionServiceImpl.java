@@ -10,7 +10,7 @@ import com.yang.olojbackendcommon.exception.ThrowUtils;
 import com.yang.olojbackendcommon.utils.SqlUtils;
 import com.yang.olojbackendquestionservice.mapper.QuestionMapper;
 import com.yang.olojbackendquestionservice.service.QuestionService;
-import com.yang.olojbackenduserservice.service.UserService;
+import com.yang.olojbackendserviceclient.service.UserFeignClient;
 import olojbackendmodel.model.dto.question.QuestionQueryRequest;
 import olojbackendmodel.model.entity.Question;
 import olojbackendmodel.model.entity.User;
@@ -39,7 +39,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 //    private final static Gson GSON = new Gson();
 
     @Resource
-    private UserService userService;
+    private UserFeignClient userFeignClient;
 
     /**
      * 校验题目是否合法
@@ -129,9 +129,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         Long userId = question.getUserId();
         User user = null;
         if (userId != null && userId > 0) {
-            user = userService.getById(userId);
+            user = userFeignClient.getById(userId);
         }
-        UserVO userVO = userService.getUserVO(user);
+        UserVO userVO = userFeignClient.getUserVO(user);
         questionVO.setUserVO(userVO);
 
         return questionVO;
@@ -146,7 +146,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         }
         // 1. 关联查询用户信息
         Set<Long> userIdSet = questionList.stream().map(Question::getUserId).collect(Collectors.toSet());
-        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
+        Map<Long, List<User>> userIdUserListMap = userFeignClient.getListByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
 
         // 填充信息
@@ -157,7 +157,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             if (userIdUserListMap.containsKey(userId)) {
                 user = userIdUserListMap.get(userId).get(0);
             }
-            questionVO.setUserVO(userService.getUserVO(user));
+            questionVO.setUserVO(userFeignClient.getUserVO(user));
             return questionVO;
         }).collect(Collectors.toList());
         questionVOPage.setRecords(questionVOList);
